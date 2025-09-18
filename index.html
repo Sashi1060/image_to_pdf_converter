@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Images to PDF Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      .drag-over {
+        border-color: #3b82f6 !important;
+        background-color: rgba(59, 130, 246, 0.05) !important;
+      }
+
+      .upload-animation {
+        animation: uploadPulse 2s infinite;
+      }
+
+      @keyframes uploadPulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.05);
+          opacity: 0.8;
+        }
+      }
+
+      .image-preview {
+        transition: all 0.3s ease;
+      }
+
+      .image-preview:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .glass-effect {
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen gradient-bg">
+    <div class="container mx-auto px-4 py-8">
+      <div class="text-center mb-12">
+        <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">
+          📄 Images to PDF
+        </h1>
+        <p class="text-xl text-white/80 max-w-2xl mx-auto">
+          Transform your images into professional PDFs with our beautiful,
+          easy-to-use converter
+        </p>
+      </div>
+
+      <div class="max-w-4xl mx-auto">
+        <div
+          id="uploadArea"
+          class="glass-effect rounded-3xl p-8 md:p-12 mb-8 border-2 border-dashed border-white/30 transition-all duration-300 hover:border-white/50"
+        >
+          <div class="text-center">
+            <div class="mb-6">
+              <div
+                class="inline-flex items-center justify-center w-24 h-24 bg-white/20 rounded-full mb-4 upload-animation"
+              >
+                <svg
+                  class="w-12 h-12 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-white mb-2">
+              Drop your images here
+            </h3>
+            <p class="text-white/70 mb-6">or click to browse your files</p>
+
+            <button
+              id="browseBtn"
+              class="bg-white text-purple-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors duration-200 shadow-lg"
+            >
+              Browse Files
+            </button>
+
+            <input
+              type="file"
+              id="fileInput"
+              multiple
+              accept="image/*"
+              class="hidden"
+            />
+
+            <div class="mt-6 text-sm text-white/60">
+              Supports: JPG, PNG, GIF, BMP, WEBP • Max 10MB per image
+            </div>
+          </div>
+        </div>
+
+        <div
+          id="imageGrid"
+          class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8 hidden"
+        ></div>
+
+        <div id="controlPanel" class="glass-effect rounded-2xl p-6 mb-8 hidden">
+          <div
+            class="flex flex-col md:flex-row items-center justify-between gap-4"
+          >
+            <div class="flex items-center gap-4">
+              <span class="text-white font-medium">PDF Settings:</span>
+              <select
+                id="pageSize"
+                class="bg-white/20 text-white rounded-lg px-4 py-2 border border-white/30 focus:border-white/50 focus:outline-none"
+              >
+                <option value="A4">A4</option>
+                <option value="Letter">Letter</option>
+                <option value="Legal">Legal</option>
+              </select>
+              <select
+                id="orientation"
+                class="bg-white/20 text-white rounded-lg px-4 py-2 border border-white/30 focus:border-white/50 focus:outline-none"
+              >
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+              </select>
+            </div>
+
+            <div class="flex gap-3">
+              <button
+                id="clearBtn"
+                class="bg-red-500/80 hover:bg-red-500 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
+              >
+                Clear All
+              </button>
+              <button
+                id="convertBtn"
+                class="bg-green-500 hover:bg-green-600 text-white px-8 py-2 rounded-lg font-medium transition-colors duration-200 shadow-lg"
+              >
+                Convert to PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="progressContainer" class="glass-effect rounded-2xl p-6 hidden">
+          <div class="flex items-center gap-4">
+            <div class="flex-1">
+              <div class="flex justify-between text-white mb-2">
+                <span id="progressTitle">Converting images...</span>
+                <span id="progressText">0%</span>
+              </div>
+              <div class="w-full bg-white/20 rounded-full h-3">
+                <div
+                  id="progressBar"
+                  class="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full transition-all duration-300"
+                  style="width: 0%"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let selectedImages = [];
+
+      const uploadArea = document.getElementById("uploadArea");
+      const fileInput = document.getElementById("fileInput");
+      const browseBtn = document.getElementById("browseBtn");
+      const imageGrid = document.getElementById("imageGrid");
+      const controlPanel = document.getElementById("controlPanel");
+      const progressContainer = document.getElementById("progressContainer");
+      const convertBtn = document.getElementById("convertBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const progressBar = document.getElementById("progressBar");
+      const progressText = document.getElementById("progressText");
+      const progressTitle = document.getElementById("progressTitle");
+
+      // File input and browse button
+      browseBtn.addEventListener("click", () => fileInput.click());
+      fileInput.addEventListener("change", handleFiles);
+
+      // Drag and drop functionality
+      uploadArea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        uploadArea.classList.add("drag-over");
+      });
+
+      uploadArea.addEventListener("dragleave", () => {
+        uploadArea.classList.remove("drag-over");
+      });
+
+      uploadArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove("drag-over");
+        handleFiles({ target: { files: e.dataTransfer.files } });
+      });
+
+      function handleFiles(event) {
+        const files = Array.from(event.target.files);
+
+        files.forEach((file) => {
+          // Simple validation for image type and size
+          if (file.type.startsWith("image/") && file.size <= 10 * 1024 * 1024) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              selectedImages.push({
+                file: file,
+                url: e.target.result,
+                name: file.name,
+              });
+              updateImageGrid();
+            };
+            reader.readAsDataURL(file);
+          } else {
+            // Optionally, alert the user about invalid files
+            console.warn(`Skipping invalid file: ${file.name}`);
+          }
+        });
+      }
+
+      function updateImageGrid() {
+        if (selectedImages.length === 0) {
+          imageGrid.classList.add("hidden");
+          controlPanel.classList.add("hidden");
+          return;
+        }
+
+        imageGrid.classList.remove("hidden");
+        controlPanel.classList.remove("hidden");
+
+        imageGrid.innerHTML = selectedImages
+          .map(
+            (img, index) => `
+                <div class="image-preview glass-effect rounded-xl p-3 relative group">
+                    <img src="${img.url}" alt="${img.name}" class="w-full h-32 object-cover rounded-lg">
+                    <button onclick="removeImage(${index})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200" aria-label="Remove ${img.name}">
+                        ×
+                    </button>
+                    <div class="mt-2 text-xs text-white/80 truncate">${img.name}</div>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      function removeImage(index) {
+        selectedImages.splice(index, 1);
+        updateImageGrid();
+      }
+
+      clearBtn.addEventListener("click", () => {
+        selectedImages = [];
+        updateImageGrid();
+        fileInput.value = ""; // Reset file input
+      });
+
+      // ===================================================================
+      // REWRITTEN CODE: Connects to a backend API for PDF conversion
+      // ===================================================================
+      convertBtn.addEventListener("click", async () => {
+        if (selectedImages.length === 0) return;
+
+        // 1. Setup UI for processing
+        progressContainer.classList.remove("hidden");
+        controlPanel.classList.add("hidden");
+        progressTitle.textContent = "Uploading...";
+        progressBar.style.width = "25%";
+        progressText.textContent = "25%";
+
+        // 2. Prepare data for sending
+        const formData = new FormData();
+        selectedImages.forEach((img) => {
+          formData.append("files", img.file);
+        });
+        formData.append("pageSize", document.getElementById("pageSize").value);
+        formData.append(
+          "orientation",
+          document.getElementById("orientation").value
+        );
+
+        try {
+          // 3. Send the request to your backend
+          // IMPORTANT: Replace with your actual backend URL
+          const response = await fetch("http://127.0.0.1:8000/convert/", {
+            method: "POST",
+            body: formData,
+            // Note: No 'Content-Type' header is needed. The browser
+            // sets it automatically for FormData with the correct boundary.
+          });
+
+          progressTitle.textContent = "Processing...";
+          progressBar.style.width = "75%";
+          progressText.textContent = "75%";
+
+          if (!response.ok) {
+            // Handle server errors
+            throw new Error(
+              `Server responded with ${response.status}: ${response.statusText}`
+            );
+          }
+
+          // 4. Handle the successful response (the PDF file)
+          const pdfBlob = await response.blob();
+
+          // Create a temporary link to trigger the browser's download prompt
+          const downloadUrl = window.URL.createObjectURL(pdfBlob);
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = downloadUrl;
+          a.download = "converted-images.pdf"; // Filename for the downloaded file
+          document.body.appendChild(a);
+          a.click();
+
+          // Clean up the temporary URL
+          window.URL.revokeObjectURL(downloadUrl);
+          a.remove();
+
+          progressBar.style.width = "100%";
+          progressText.textContent = "Complete!";
+        } catch (error) {
+          console.error("Conversion failed:", error);
+          alert(
+            "An error occurred during conversion. Please check the console for details."
+          );
+          progressTitle.textContent = "Error!";
+          progressBar.style.backgroundColor = "#ef4444"; // Red for error
+        } finally {
+          // 5. Reset the UI after a short delay
+          setTimeout(() => {
+            progressContainer.classList.add("hidden");
+            controlPanel.classList.remove("hidden");
+            progressBar.style.width = "0%";
+            progressBar.style.backgroundColor = ""; // Reset color
+          }, 2000);
+        }
+      });
+
+      // Make the upload area clickable for file selection
+      uploadArea.addEventListener("click", (e) => {
+        // Ensure clicking the div itself (and not child elements) triggers the input
+        if (e.target.id === "uploadArea") {
+          fileInput.click();
+        }
+      });
+    </script>
+  </body>
+</html>
