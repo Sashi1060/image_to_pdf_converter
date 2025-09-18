@@ -88,7 +88,7 @@ An active internet connection (for the front-end CDN)
 Installation & Setup
 Clone the repository:
 
-## git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
+## git clone [https://github.com/Sashi1060/image_to_pdf_converter.git](https://github.com/Sashi1060/image_to_pdf_converter.git)
 
 cd your-repo-name
 
